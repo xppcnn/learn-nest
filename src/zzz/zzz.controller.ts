@@ -11,6 +11,7 @@ import {
   UploadedFiles,
   OnModuleInit,
   OnApplicationBootstrap,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ZzzService } from './zzz.service';
 import { CreateZzzDto } from './dto/create-zzz.dto';
@@ -31,7 +32,7 @@ export class ZzzController implements OnModuleInit, OnApplicationBootstrap {
     );
   }
   @Post()
-  create(@Body() createZzzDto: CreateZzzDto) {
+  create(@Body(new ValidationPipe()) createZzzDto: CreateZzzDto) {
     return `received: ${JSON.stringify(createZzzDto)}`;
   }
 
