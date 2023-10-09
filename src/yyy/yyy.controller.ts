@@ -8,10 +8,12 @@ import {
   Delete,
   OnModuleInit,
   OnApplicationBootstrap,
+  UseGuards,
 } from '@nestjs/common';
 import { YyyService } from './yyy.service';
 import { CreateYyyDto } from './dto/create-yyy.dto';
 import { UpdateYyyDto } from './dto/update-yyy.dto';
+import { LoginGuard } from 'src/login.guard';
 
 @Controller('yyy')
 export class YyyController implements OnModuleInit, OnApplicationBootstrap {
@@ -37,6 +39,7 @@ export class YyyController implements OnModuleInit, OnApplicationBootstrap {
   }
 
   @Get(':id')
+  @UseGuards(LoginGuard)
   findOne(@Param('id') id: string) {
     return this.yyyService.findOne(+id);
   }
