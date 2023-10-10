@@ -12,6 +12,10 @@ import { User } from './user/entities/user.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { Permission } from './user/entities/permission.entity';
 import { RedisModule } from './redis/redis.module';
+import { Role } from './user/entities/role.entity';
+import { APP_GUARD } from '@nestjs/core';
+import { LoginGuard } from './login.guard';
+import { PermissionGuard } from './user/permission.guard';
 
 @Module({
   imports: [
@@ -25,14 +29,14 @@ import { RedisModule } from './redis/redis.module';
     FilesUploadModule,
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: '1.13.174.237',
+      host: 'host',
       port: 13306,
       username: 'root',
-      password: '123456',
-      database: 'acl_test',
+      password: 'password',
+      database: 'rbac_test',
       synchronize: true,
       logging: true,
-      entities: [User, Permission],
+      entities: [User, Role, Permission],
       poolSize: 10,
       connectorPackage: 'mysql2',
       extra: {
@@ -50,7 +54,11 @@ import { RedisModule } from './redis/redis.module';
     UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: LoginGuard },
+    { provide: APP_GUARD, useClass: PermissionGuard },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

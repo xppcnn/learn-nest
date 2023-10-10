@@ -13,9 +13,11 @@ import {
 import { YyyService } from './yyy.service';
 import { CreateYyyDto } from './dto/create-yyy.dto';
 import { UpdateYyyDto } from './dto/update-yyy.dto';
-import { LoginGuard } from 'src/login.guard';
+import { RequireLogin } from 'src/common.decorator';
+
 
 @Controller('yyy')
+@RequireLogin()
 export class YyyController implements OnModuleInit, OnApplicationBootstrap {
   constructor(private readonly yyyService: YyyService) {}
   onModuleInit() {
@@ -39,7 +41,6 @@ export class YyyController implements OnModuleInit, OnApplicationBootstrap {
   }
 
   @Get(':id')
-  @UseGuards(LoginGuard)
   findOne(@Param('id') id: string) {
     return this.yyyService.findOne(+id);
   }

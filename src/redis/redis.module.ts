@@ -10,10 +10,10 @@ import { createClient } from 'redis';
       async useFactory() {
         const client = createClient({
           socket: {
-            host: '1.13.174.237',
+            host: 'host',
             port: 6379,
           },
-          password: '123456',
+          password: 'password',
         });
         await client.connect();
         return client;

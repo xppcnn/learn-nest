@@ -46,8 +46,8 @@ export class UserController {
   }
 
   @Get('init')
-  async initPermission() {
-    await this.userService.initPremission();
+  async initData() {
+    await this.userService.initData();
     return 'done';
   }
 }

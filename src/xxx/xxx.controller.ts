@@ -1,23 +1,11 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Inject,
-  UseGuards,
-  SetMetadata,
-} from '@nestjs/common';
+import { Controller, Get, Param, Inject } from '@nestjs/common';
 import { XxxService } from './xxx.service';
-import { CreateXxxDto } from './dto/create-xxx.dto';
-import { UpdateXxxDto } from './dto/update-xxx.dto';
+
 import { MODULE_OPTIONS_TOKEN, OPTIONS_TYPE } from './xxx.module-definition';
-import { LoginGuard } from 'src/login.guard';
-import { PermissionGuard } from 'src/user/permission.guard';
+import { RequireLogin, RequirePermission } from 'src/common.decorator';
 
 @Controller('xxx')
+@RequireLogin()
 export class XxxController {
   constructor(
     @Inject(MODULE_OPTIONS_TOKEN) private options: typeof OPTIONS_TYPE,
@@ -35,8 +23,7 @@ export class XxxController {
   // }
 
   @Get(':id')
-  @UseGuards(LoginGuard, PermissionGuard)
-  @SetMetadata('permission', 'query_aaa')
+  @RequirePermission('新增 bbb')
   findOne(@Param('id') id: string) {
     // return this.options;
     return this.xxxService.findOne(+id);

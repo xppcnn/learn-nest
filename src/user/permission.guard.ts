@@ -22,31 +22,25 @@ export class PermissionGuard implements CanActivate {
   private userService: UserService;
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req: Request = context.switchToHttp().getRequest();
-    console.log("🚀 ~ file: permission.guard.ts:25 ~ PermissionGuard ~ canActivate ~ req:", req)
     const curUser = req.user;
-    console.log("🚀 ~ file: permission.guard.ts:26 ~ PermissionGuard ~ canActivate ~ curUser:", curUser)
     if (!curUser) {
-      throw new UnauthorizedException('用户未登录');
-    }
-    let permissions = await this.redisService.listGet(
-      `user_${curUser.id}_permissions`,
-    );
-    if (permissions.length === 0) {
-      const userVo = await this.userService.findByUserName(curUser.username);
-      permissions = userVo.permissions.map((item) => item.name);
-      this.redisService.listSet(
-        `user_${curUser.id}_permissions`,
-        permissions,
-        60 * 30,
-      );
-    }
-
-    const permission = this.reflector.get('permission', context.getHandler());
-    console.log(permission, permissions);
-    if (permissions.some((item) => item === permission)) {
       return true;
-    } else {
-      throw new UnauthorizedException('没有访问权限');
     }
+    const permissionVo = await this.userService.findPermissionByUserId(
+      curUser.id,
+    );
+    const requirePermission = this.reflector.getAllAndOverride(
+      'require-permission',
+      [context.getClass(), context.getHandler()],
+    );
+
+    for (let i = 0; i < requirePermission.length; i++) {
+      const curPer = requirePermission[i];
+      const funder = permissionVo.find((ele) => ele.name === curPer);
+      if (!funder) {
+        throw new UnauthorizedException('您没有访问该接口的权限');
+      }
+    }
+    return true;
   }
 }

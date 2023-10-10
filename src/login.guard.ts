@@ -5,6 +5,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { Observable } from 'rxjs';
@@ -13,10 +14,20 @@ import { Observable } from 'rxjs';
 export class LoginGuard implements CanActivate {
   @Inject(JwtService)
   private jwtService: JwtService;
+
+  @Inject(Reflector)
+  private reflector: Reflector;
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request: Request = context.switchToHttp().getRequest();
+    const requireLogin = this.reflector.getAllAndOverride('require-login', [
+      context.getClass(),
+      context.getHandler(),
+    ]);
+    if (!requireLogin) {
+      return true;
+    }
     const authorization = request.header('authorization') || '';
     const token = authorization.substring(7);
     if (!token) {
