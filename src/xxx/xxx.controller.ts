@@ -7,11 +7,15 @@ import {
   Param,
   Delete,
   Inject,
+  UseGuards,
+  SetMetadata,
 } from '@nestjs/common';
 import { XxxService } from './xxx.service';
 import { CreateXxxDto } from './dto/create-xxx.dto';
 import { UpdateXxxDto } from './dto/update-xxx.dto';
 import { MODULE_OPTIONS_TOKEN, OPTIONS_TYPE } from './xxx.module-definition';
+import { LoginGuard } from 'src/login.guard';
+import { PermissionGuard } from 'src/user/permission.guard';
 
 @Controller('xxx')
 export class XxxController {
@@ -31,9 +35,11 @@ export class XxxController {
   // }
 
   @Get(':id')
+  @UseGuards(LoginGuard, PermissionGuard)
+  @SetMetadata('permission', 'query_aaa')
   findOne(@Param('id') id: string) {
-    return this.options;
-    // return this.xxxService.findOne(+id);
+    // return this.options;
+    return this.xxxService.findOne(+id);
   }
 
   // @Patch(':id')
