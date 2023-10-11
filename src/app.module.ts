@@ -16,9 +16,13 @@ import { Role } from './user/entities/role.entity';
 import { APP_GUARD } from '@nestjs/core';
 import { LoginGuard } from './login.guard';
 import { PermissionGuard } from './user/permission.guard';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     AaaModule,
     XxxModule.register({
       aaa: 11,
@@ -27,28 +31,38 @@ import { PermissionGuard } from './user/permission.guard';
     ZzzModule,
     YyyModule,
     FilesUploadModule,
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: 'host',
-      port: 13306,
-      username: 'root',
-      password: 'password',
-      database: 'rbac_test',
-      synchronize: true,
-      logging: true,
-      entities: [User, Role, Permission],
-      poolSize: 10,
-      connectorPackage: 'mysql2',
-      extra: {
-        authPlugin: 'sha256_password',
+    TypeOrmModule.forRootAsync({
+      useFactory(configService: ConfigService) {
+        return {
+          type: 'mysql',
+          host: configService.get('mysql_server_host'),
+          port: configService.get('mysql_server_port'),
+          username: configService.get('mysql_server_username'),
+          password: configService.get('mysql_server_password'),
+          database: configService.get('mysql_server_database'),
+          synchronize: true,
+          logging: false,
+          entities: [User, Role, Permission],
+          poolSize: 10,
+          connectorPackage: 'mysql2',
+          extra: {
+            authPlugin: 'sha256_password',
+          },
+        };
       },
+      inject: [ConfigService],
     }),
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: 'aaaaaa',
-      signOptions: {
-        expiresIn: '7d',
+      useFactory(configService: ConfigService) {
+        return {
+          secret: configService.get('jwt_secret'),
+          signOptions: {
+            expiresIn: configService.get('jwt_expires'),
+          },
+        };
       },
+      inject: [ConfigService],
     }),
     RedisModule,
     UserModule,

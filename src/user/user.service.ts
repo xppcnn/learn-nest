@@ -55,6 +55,11 @@ export class UserService {
     }
   }
 
+  async findUserById(id: number) {
+    return await this.entityManager.findOne(User, {
+      where: { id },
+    });
+  }
   async initData() {
     const user1 = new User();
     user1.username = '张三';

@@ -3,15 +3,15 @@ import {
   Post,
   Body,
   Inject,
-  Res,
   ValidationPipe,
   Get,
+  Query,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from './user.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { Response } from 'express';
 
 @Controller('user')
 export class UserController {
@@ -21,20 +21,30 @@ export class UserController {
   private jwtService: JwtService;
 
   @Post('login')
-  async login(
-    @Body(ValidationPipe) user: LoginDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async login(@Body(ValidationPipe) user: LoginDto) {
     const foundUser = await this.userService.login(user);
     if (foundUser) {
-      const token = await this.jwtService.signAsync({
-        user: {
-          id: foundUser.id,
+      const access_token = this.jwtService.sign(
+        {
+          userId: foundUser.id,
           username: foundUser.username,
         },
-      });
-      res.setHeader('token', token);
-      return '登录成功';
+        {
+          expiresIn: '30m',
+        },
+      );
+      const refresh_token = this.jwtService.sign(
+        {
+          userId: foundUser.id,
+        },
+        {
+          expiresIn: '7d',
+        },
+      );
+      return {
+        access_token,
+        refresh_token,
+      };
     } else {
       return '登录失败';
     }
@@ -49,5 +59,38 @@ export class UserController {
   async initData() {
     await this.userService.initData();
     return 'done';
+  }
+
+  @Get('refresh')
+  async refresh(@Query('refresh_token') refreshToken: string) {
+    try {
+      const data = this.jwtService.verify(refreshToken);
+      const user = await this.userService.findUserById(data.userId);
+      const access_token = this.jwtService.sign(
+        {
+          userId: user.id,
+          username: user.username,
+        },
+        {
+          expiresIn: '30m',
+        },
+      );
+
+      const refresh_token = this.jwtService.sign(
+        {
+          userId: user.id,
+        },
+        {
+          expiresIn: '7d',
+        },
+      );
+
+      return {
+        access_token,
+        refresh_token,
+      };
+    } catch (error) {
+      throw new UnauthorizedException('token已失效，请重新登录');
+    }
   }
 }
